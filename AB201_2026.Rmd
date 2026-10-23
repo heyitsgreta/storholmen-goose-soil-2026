@@ -1,0 +1,312 @@
+---
+title: "GOOSEDATA"
+author: "Catharina"
+date: "2026-08-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+
+```{r}
+library(tidyverse)
+library(infer)
+```
+
+### Visualising the data
+
+```{r}
+Goose_ph <-
+  read_csv("R_rawdata(PH).csv")
+
+Goose_ph |>
+  ggplot(aes(y = pH,x = Feces_count)) + geom_point()+ labs(x = "Fecal Dropping Count", y = "pH", title = "Fecal Dropping Count vs pH") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+```
+
+```{r}
+Goose_moisture <-
+  read_csv("R_rawdata(SOILMOISTURE).csv")
+
+Goose_moisture |>
+  ggplot(aes(x = Feces_count,y = Moisture_mean)) + geom_point() + labs(x = "Fecal Dropping Count", y = "Mean moisture (%)" , title = "Fecal Dropping Count vs Mean Soil Moisture") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+```
+
+```{r}
+Goose_CN<-
+  read_csv("R_rawdata(CN).csv")
+
+Goose_CN |>
+  ggplot(aes(y = CN,x = Feces_count)) + geom_point()+ labs(x = "Fecal Dropping Count" , y = "Carbon Nitrogen Ratio", title = "Fecal Dropping Count vs Carbon Nitrogen Ratio") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+  
+```
+
+```{r}
+Goose_ph <-
+  read_csv("R_rawdata(pH).csv")
+
+Goose_ph |>
+  ggplot(aes(y = pH,x = Moisture_mean)) + geom_point()+ labs(x = "Mean Soil Moisture (%)", y = "pH", title = "Mean Soil Moisture vs pH") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+```
+
+```{r}
+Goose_ph |>
+  ggplot(aes(y = pH,x = CN)) + geom_point()+ labs(x = "Carbon Nitrogen Ratio", y = "pH", title = "Carbon Nitrogen Ratio vs pH") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+```
+
+```{r}
+Goose_ph |>
+  ggplot(aes(y = Moisture_mean,x = CN)) + geom_point()+ labs(x = "Mean Soil Moisture (%)", y = "Carbon Nitrogen Ratio", title = "Carbon Nitrogen Ratio vs Mean Soil Moisture") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+```
+
+```{r}
+p1 <- ggplot(Goose_ph, aes(y = pH,x = Feces_count)) + geom_point()+ labs(x = "Feces Count", y = "pH", title = "Feces count vs pH") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+
+p2 <- ggplot(Goose_ph, aes(y = CN,x = Feces_count)) + geom_point()+ labs(x = "Feces Count" , y = "Carbon Nitrogen Ratio)", title = "Feces count vs Carbon Nitrogen Ratio") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+
+p3 <- ggplot(Goose_moisture, aes(x = Feces_count,y = Moisture_mean)) + geom_point() + labs(x = "Feces Count", y = "Mean moisture (%)" , title = "Mean Soil Moisture vs Feces count") + theme_classic() + geom_smooth(method = "lm", se = TRUE, color = "blue") 
+
+final_plot<-(p1 + p2 + p3) 
+
+ggsave("ggplot_combined.png", plot = final_plot, width = 8, height = 6)
+```
+
+### Regression Analysis
+
+#### pH
+
+```{r}
+obs_fit_ph <-
+  Goose_ph |>
+  specify(pH ~ Feces_count) |>
+  calculate(stat = "slope")
+
+obs_fit_ph
+```
+
+Response: reproductive_success (numeric) (ph) Explanatory: mating_success (numeric) (feces)
+
+```{r}
+null_dist_ph <-
+  Goose_ph |>
+  specify(pH ~ Feces_count) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 10000, type = "permute") |>
+  calculate(stat = "slope")
+
+null_dist_ph
+```
+
+```{r}
+null_dist |>
+  visualize() +
+  shade_p_value(obs_stat = obs_fit_ph, direction = "two-sided")
+
+null_dist |>
+  get_p_value(obs_stat = obs_fit_ph, direction = "two-sided")
+```
+
+Observed fit ph:
+
+```         
+-0.000325
+```
+
+p:
+
+```         
+0.847
+```
+
+#### Soil moisture:
+
+```{r}
+obs_fit_m <-
+  Goose_moisture |>
+  specify(Moisture_mean ~ Feces_count) |>
+  calculate(stat = "slope")
+
+obs_fit_m
+```
+
+```{r}
+null_dist_m <-
+  Goose_moisture |>
+  specify(Moisture_mean ~ Feces_count) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 10000, type = "permute") |>
+  calculate(stat = "slope")
+```
+
+```{r}
+null_dist_m |>
+  visualize() +
+  shade_p_value(obs_stat = obs_fit_m, direction = "two-sided")
+
+null_dist_m |>
+  get_p_value(obs_stat = obs_fit_m, direction = "two-sided")
+```
+
+Observed fit:
+
+```         
+-0.00352
+```
+
+p: 0.931
+
+#### C/N ratio
+
+```{r}
+obs_fit_cn <-
+  Goose_CN |>
+  specify(CN ~ Feces_count) |>
+  calculate(stat = "slope")
+
+obs_fit_cn
+```
+
+```{r}
+null_dist_cn <-
+  Goose_CN |>
+  specify(CN ~ Feces_count) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 10000, type = "permute") |>
+  calculate(stat = "slope")
+```
+
+```{r}
+null_dist_cn |>
+  visualize() +
+  shade_p_value(obs_stat = obs_fit_cn, direction = "two-sided")
+
+null_dist_cn |>
+  get_p_value(obs_stat = obs_fit_cn, direction = "two-sided")
+```
+
+Observed fit:
+
+```         
+0.00152
+```
+
+P: 0.934
+
+### Covariance analysis
+
+#### pH vs CN
+
+```{r}
+C_ph_CN <-
+  Goose_ph |>
+  specify(pH ~ CN) |>
+  calculate(stat = "correlation")
+
+C_ph_CN
+```
+
+```{r}
+null_dist_pHCN <-
+  Goose_ph |>
+  specify(pH ~ CN) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 10000, type = "permute") |>
+  calculate(stat = "correlation")
+```
+
+```{r}
+null_dist_pHCN |>
+  visualize() +
+  shade_p_value(obs_stat = C_ph_CN, direction = "two-sided")
+
+null_dist_pHCN |>
+  get_p_value(obs_stat = C_ph_CN, direction = "two-sided")
+```
+
+Observed Correlation: -0.489
+
+p: 0.0222
+
+```         
+ Wickham H, Averick M, Bryan J, Chang W, McGowan LD, François R, Grolemund G, Hayes
+  A, Henry L, Hester J, Kuhn M, Pedersen TL, Miller E, Bache SM, Müller K, Ooms J,
+  Robinson D, Seidel DP, Spinu V, Takahashi K, Vaughan D, Wilke C, Woo K, Yutani H
+  (2019). “Welcome to the tidyverse.” _Journal of Open Source Software_, *4*(43),
+  1686. doi:10.21105/joss.01686 https://doi.org/10.21105/joss.01686.
+```
+
+#### pH vs Soil moisture
+
+```{r}
+C_ph_S <-
+  Goose_ph |>
+  specify(pH ~ Moisture_mean) |>
+  calculate(stat = "correlation")
+
+C_ph_S
+
+null_dist_pHS<-
+  Goose_ph |>
+  specify(pH ~ Moisture_mean) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 10000, type = "permute") |>
+  calculate(stat = "correlation")
+```
+
+```{r}
+null_dist_pHS |>
+  visualize() +
+  shade_p_value(obs_stat = C_ph_S, direction = "two-sided")
+
+null_dist_pHCN |>
+  get_p_value(obs_stat = C_ph_S, direction = "two-sided")
+```
+
+Observed Correlation: -0.00784
+
+p: 0.965
+
+#### Soil Moisture vs CN
+
+```{r}
+C_CN_S <-
+  Goose_ph |>
+  specify(CN ~ Moisture_mean) |>
+  calculate(stat = "correlation")
+
+C_CN_S
+
+null_dist_CNS<-
+  Goose_ph |>
+  specify(CN ~ Moisture_mean) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 10000, type = "permute") |>
+  calculate(stat = "correlation")
+```
+
+```{r}
+null_dist_CNS |>
+  visualize() +
+  shade_p_value(obs_stat = C_CN_S, direction = "two-sided")
+
+null_dist_CNS |>
+  get_p_value(obs_stat = C_CN_S, direction = "two-sided")
+```
+
+Observed Correlation: 0.00991
+
+p: 0.934
+
+##### Citation
+
+```{r}
+citation()
+citation("infer")
+citation("tidyverse")
+```
+
+```{r}
+RStudio.Version()
+```
