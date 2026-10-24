@@ -1,6 +1,6 @@
 ---
 title: "GOOSEDATA"
-author: "Catharina"
+author: "Goose Soil Group"
 date: "2026-08-19"
 output: html_document
 ---
